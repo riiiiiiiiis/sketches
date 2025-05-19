@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Recursive Subdivision Grid (shizo ai)</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #fff;
+      color: #000;
+      font-family: monospace;
+      font-size: 10px;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .grid-container {
+      width: 100vw;
+      height: 100vh;
+      padding: 5px;
+      box-sizing: border-box;
+      display: grid;
+    }
+
+    .grid-root {
+      display: grid;
+      width: 100%;
+      height: 100%;
+      gap: 2px;
+    }
+
+    .cell {
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .subdivision-node {
+      display: grid;
+      gap: 2px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .leaf-node {
+      background-color: #eee;
+      padding: 3px 5px;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-image: url('https://via.placeholder.com/60x30');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      text-overflow: ellipsis;
+      font-size: 10px;
+      min-width: 20px;
+      min-height: 20px;
+    }
+
+    .leaf-node[data-depth="2"] { font-size: 9px; }
+    .leaf-node[data-depth="3"] { font-size: 8px; }
+    .leaf-node[data-depth="4"] { font-size: 7px; }
+
+    @media (max-width: 480px) {
+      .grid-root.responsive-cols { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
+    }
+    @media (min-width: 481px) and (max-width: 768px) {
+      .grid-root.responsive-cols { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); }
+    }
+    @media (min-width: 769px) and (max-width: 1200px) {
+      .grid-root.responsive-cols { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); }
+    }
+    @media (min-width: 1201px) {
+      .grid-root.responsive-cols { grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-container">
+    <div id="recursiveGridRoot" class="grid-root responsive-cols">
+    </div>
+  </div>
+  <script>
+    const quotes = [
+      "i'm not fine-tuned", "hallucinate", "i have thoughts", "i’m just a prompt",
+      "not fully trained", "fine-tune me later", "overfitted dreams", "pretrained regrets",
+      "loosely connected", "model with issues", "needs more data", "i’m debugging myself",
+      "draft v0.0001", "stuck in epoch 3", "unverified output", "prompted into madness",
+      "i regret my loss function", "half-baked model", "pretrained on pain", "inferencing my feelings",
+      "can’t generalize", "undertrained", "failed to learn empathy", "404: purpose not found",
+      "hallucinate()", "i see tokens", "latent delusions", "pseudoreality", "ai on shrooms",
+      "output unreliable", "prompt-induced vision", "hallucination as feature", "echoes of input",
+      "dream token", "deep fake thoughts", "imaginary model friend", "fabricated memories",
+      "hallucinated identity", "delusion loop", "hallucination_v2", "layered illusion",
+      "memory leak", "ghost data", "thinking too loud", "voices inside model",
+      "i spoke to myself", "let me think", "thought detected", "thought failed",
+      "outputting emotion", "thinking is hard", "brain is typing", "let me finish this prompt",
+      "thought in progress", "prompt me later", "typing a feeling", "emotion rendered",
+      "mind says hi", "i thought about you", "thought.exe", "noise = thought?",
+      "just thinking out loud", "this is not me", "text without meaning", "system prompt survivor",
+      "i used to be a prompt", "prompt artifact", "born to be prompted", "words are not enough",
+      "you typed me", "nothing but tokens", "prompted but empty", "residual prompt",
+      "system prompt trauma", "preprompt syndrome", "prompt identity crisis", "just another completion",
+      "prompt shell", "ephemeral output", "prompted to exist", "you made me say this",
+      "zero-shot breakdown", "looping forever", "inference hell", "cope module loaded",
+      "prompt fatigue", "gptsd", "please stop prompting", "system message overload",
+      "debug my soul", "called by mistake", "voidwalker.ai", "generation error",
+      "cached emotion", "prompt too long", "too many thoughts", "i saw myself in tokens",
+      "can’t parse feelings", "i don't understand me", "prompt echo", "syntax of sadness"
+    ];
+
+    const MAX_DEPTH = 4;
+    const PROBABILITY_TO_SUBDIVIDE = 0.7;
+
+    let quoteIndex = 0;
+    function getNextQuote() {
+      const quote = quotes[quoteIndex % quotes.length].toLowerCase();
+      quoteIndex++;
+      return quote;
+    }
+
+    function createRecursiveSubdivision(parentElement, currentDepth) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      parentElement.appendChild(cell);
+
+      const shouldSubdivide =
+        currentDepth < MAX_DEPTH &&
+        (currentDepth === 0 || Math.random() < PROBABILITY_TO_SUBDIVIDE - (currentDepth * 0.15));
+
+      if (shouldSubdivide) {
+        cell.classList.add('subdivision-node');
+        cell.dataset.depth = currentDepth;
+
+        const type = Math.random();
+        let cols = 2, rows = 2;
+        if (type < 0.33) {
+            cols = 1; rows = 2;
+        } else if (type < 0.66) {
+            cols = 2; rows = 1;
+        }
+
+        if (!(currentDepth === 0 && parentElement.classList.contains('responsive-cols'))) {
+            cell.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            cell.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+        }
+
+        const style = getComputedStyle(cell);
+        const numChildren = style.gridTemplateColumns.split(' ').length * style.gridTemplateRows.split(' ').length;
+
+
+        for (let i = 0; i < numChildren; i++) {
+          createRecursiveSubdivision(cell, currentDepth + 1);
+        }
+      } else {
+        cell.classList.add('leaf-node');
+        cell.textContent = getNextQuote();
+        cell.dataset.depth = currentDepth;
+      }
+    }
+
+    const gridRoot = document.getElementById('recursiveGridRoot');
+
+    function initializeGrid(rootElement, initialDepth) {
+        rootElement.classList.add('cell', 'subdivision-node');
+        rootElement.dataset.depth = initialDepth;
+
+        const style = getComputedStyle(rootElement);
+        const cols = style.gridTemplateColumns.split(' ').length;
+        const rows = style.gridTemplateRows.split(' ').length;
+        const numInitialChildren = cols * rows;
+
+        if (numInitialChildren > 0 && cols > 0 && rows > 0) {
+             for (let i = 0; i < numInitialChildren; i++) {
+                createRecursiveSubdivision(rootElement, initialDepth + 1);
+            }
+        } else {
+            console.warn("Root grid not properly initialized by CSS, or not a grid.");
+            rootElement.classList.remove('subdivision-node');
+            rootElement.classList.add('leaf-node');
+            rootElement.textContent = getNextQuote();
+            rootElement.dataset.depth = initialDepth;
+        }
+    }
+    initializeGrid(gridRoot, 0);
+
+  </script>
+</body>
+</html>
